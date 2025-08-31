@@ -1,107 +1,81 @@
 package com.programacao.web.fatec.api_fatec.controller;
 
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
 
 import com.programacao.web.fatec.api_fatec.domain.cliente.ClienteRepository;
 import com.programacao.web.fatec.api_fatec.entities.Cliente;
 
 import jakarta.annotation.PostConstruct;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
-
-
 @RestController
 @RequestMapping("/api/clientes")
 public class ClienteController {
-    
-    private final List<Cliente> listaDeCliente = new ArrayList<>();
 
     @Autowired
     private ClienteRepository clienteRepository;
 
-    public ClienteController() {
- 
-        //forma1
-        listaDeCliente.add(new Cliente(1L, "Danilo", "rua xxx"));
-
-
-        //forma2
-        Cliente cliente2 = new Cliente();
-        cliente2.setId(2L);
-        cliente2.setNome("Joao");
-        cliente2.setEndereco("Rua yyyy");
-        listaDeCliente.add(cliente2);
-    }
-
     @PostConstruct()
     public void dadosIniciais() {
-        clienteRepository.save(new Cliente(null, "Danilo", "rua xxx"));
-        clienteRepository.save(new Cliente(null, "Danilo2", "rua xxx"));
-        clienteRepository.save(new Cliente(null, "Danilo3", "rua xxx"));
+        clienteRepository.save(new Cliente(null, "Danilo", "Rua das Flores, 123"));
+        clienteRepository.save(new Cliente(null, "João", "Avenida Central, 456"));
+        clienteRepository.save(new Cliente(null, "Maria", "Rua da Paz, 789"));
     }
 
-    @GetMapping("/listarClientes")
-    public List<Cliente> listarClientes() {
+    // CREATE - Criar um novo cliente
+    @PostMapping
+    public Cliente createCliente(@RequestBody Cliente cliente) {
+        cliente.setId(null); // Garantir que o ID seja gerado automaticamente
+        return clienteRepository.save(cliente);
+    }
+
+    // READ - Listar todos os clientes
+    @GetMapping
+    public List<Cliente> getAllClientes() {
         return clienteRepository.findAll();
     }
-    
 
-    @GetMapping("/testeCliente1") //-> /api/clientes/testeCliente1
-    public String testeCliente() {
-        return "Teste Client";
+    // READ - Buscar cliente por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Cliente> getClienteById(@PathVariable Long id) {
+        Optional<Cliente> cliente = clienteRepository.findById(id);
+        return cliente.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/testeCliente2/{nome}") //-> /api/clientes/testeCliente2/
-    public String testeCliente2(@PathVariable String nome) {
-        return nome;
-    }
-
-    @PostMapping("")
-    public Cliente createCliente(@RequestBody Cliente cliente) {
-
-        listaDeCliente.add(cliente);
-
-        return cliente;
-    }
-
-    @DeleteMapping("/{id}")
-    public String deletarCliente(@PathVariable Long id) {
-        
-        for (Cliente cliente: listaDeCliente) {
-                if (cliente.getId() == id) {
-                    listaDeCliente.remove(cliente);
-                    return "OK";
-                }
-        }
-
-        return "NÃO ENCONTRADO ID:"+id;
-    }
-
+    // UPDATE - Atualizar cliente existente
     @PutMapping("/{id}")
-    public String alterarCliente(@PathVariable Long id, @RequestBody Cliente entity) {
+    public ResponseEntity<Cliente> updateCliente(@PathVariable Long id, @RequestBody Cliente clienteAtualizado) {
+        Optional<Cliente> clienteExistente = clienteRepository.findById(id);
         
-         for (Cliente cliente: listaDeCliente) {
-                if (cliente.getId() == id) {
-                    cliente.setId(id);
-                    cliente.setNome(entity.getNome());
-                    return "ENCONTROU";
-                }
+        if (clienteExistente.isPresent()) {
+            Cliente cliente = clienteExistente.get();
+            cliente.setNome(clienteAtualizado.getNome());
+            cliente.setEndereco(clienteAtualizado.getEndereco());
+            return ResponseEntity.ok(clienteRepository.save(cliente));
         }
-
-        return "NÃO ENCONTRADO ID:"+id;    
+        
+        return ResponseEntity.notFound().build();
     }
-    
+
+    // DELETE - Deletar cliente por ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteCliente(@PathVariable Long id) {
+        if (clienteRepository.existsById(id)) {
+            clienteRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
