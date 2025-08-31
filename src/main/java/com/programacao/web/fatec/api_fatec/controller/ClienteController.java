@@ -34,27 +34,27 @@ public class ClienteController {
         clienteRepository.save(new Cliente(null, "Maria", "Rua da Paz, 789"));
     }
 
-    // CREATE - Criar um novo cliente
+    // CREATE
     @PostMapping
     public Cliente createCliente(@RequestBody Cliente cliente) {
         cliente.setId(null); // Garantir que o ID seja gerado automaticamente
         return clienteRepository.save(cliente);
     }
 
-    // READ - Listar todos os clientes
+    // READ
     @GetMapping
     public List<Cliente> getAllClientes() {
         return clienteRepository.findAll();
     }
 
-    // READ - Buscar cliente por ID
+    // READ
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> getClienteById(@PathVariable Long id) {
         Optional<Cliente> cliente = clienteRepository.findById(id);
         return cliente.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // UPDATE - Atualizar cliente existente
+    // UPDATE
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> updateCliente(@PathVariable Long id, @RequestBody Cliente clienteAtualizado) {
         Optional<Cliente> clienteExistente = clienteRepository.findById(id);
@@ -69,7 +69,7 @@ public class ClienteController {
         return ResponseEntity.notFound().build();
     }
 
-    // DELETE - Deletar cliente por ID
+    // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCliente(@PathVariable Long id) {
         if (clienteRepository.existsById(id)) {
